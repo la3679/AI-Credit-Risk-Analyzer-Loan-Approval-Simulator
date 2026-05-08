@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user financial profile and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "financialData": { "$ref": "FinancialData" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "FinancialProfile": {
+      "title": "Financial Profile",
+      "description": "A saved financial analysis profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "financialData": { "$ref": "FinancialData" },
+        "riskResult": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "financialData"]
+    },
+    "FinancialData": {
+      "title": "Financial Data",
+      "description": "User's financial input data",
+      "type": "object",
+      "properties": {
+        "age": { "type": "number" },
+        "income": { "type": "number" },
+        "employmentStatus": { "type": "string" },
+        "creditScore": { "type": "number" },
+        "existingLoans": { "type": "number" },
+        "monthlyExpenses": { "type": "number" },
+        "loanAmount": { "type": "number" },
+        "loanPurpose": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document"
+    },
+    "/users/{userId}/profiles/{profileId}": {
+      "schema": "FinancialProfile",
+      "description": "Saved financial profiles for a user"
+    }
+  }
+}
