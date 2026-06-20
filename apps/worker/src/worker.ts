@@ -10,9 +10,10 @@ import { connectDatabase } from "../../api/src/db";
 import { env } from "../../api/src/config";
 import { getQueues, getRedis, QUEUES } from "../../api/src/queues";
 import { AIPromptTemplate, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, User } from "../../api/src/models";
+import { reportStorageDir } from "../../api/src/storage";
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
-const storageDir = path.resolve(process.env.REPORT_STORAGE_DIR ?? "storage/reports");
+const storageDir = reportStorageDir;
 
 function writePdf(reportId: string, title: string, analysis: { input: Record<string, unknown>; result: Record<string, unknown>; explanation: Record<string, unknown> }) {
   fs.mkdirSync(storageDir, { recursive: true });

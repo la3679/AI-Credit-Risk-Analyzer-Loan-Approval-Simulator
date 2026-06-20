@@ -11,6 +11,7 @@ import { clearSessionCookies, issueSession, requireAdmin, requireAuth, rotateSes
 import { ApiError } from "./errors";
 import { getFeatureFlags, requireFlag } from "./flags";
 import { getQueues } from "./queues";
+import { reportStorageDir } from "./storage";
 
 const router = Router();
 const safeUser = (user: { _id: unknown; name: string; email: string; role: string; isGuest?: boolean }) => ({ id: String(user._id), name: user.name, email: user.email, role: user.role, isGuest: Boolean(user.isGuest) });
@@ -253,7 +254,7 @@ router.get("/api/reports/:id/download", requireAuth, async (req, res, next) => {
   try {
     const report: any = await Report.findOne({ _id: req.params.id, ownerId: req.auth!.userId, status: "completed" }).lean();
     if (!report) throw new ApiError(404, "NOT_FOUND", "Completed report was not found.");
-    const reportPath = path.resolve(process.env.REPORT_STORAGE_DIR ?? "storage/reports", `${report._id}.pdf`);
+    const reportPath = path.join(reportStorageDir, `${report._id}.pdf`);
     if (!fs.existsSync(reportPath)) throw new ApiError(404, "REPORT_FILE_MISSING", "The report file is no longer available.");
     res.download(reportPath, `${report.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.pdf`);
   } catch (error) { next(error); }
@@ -305,7 +306,10 @@ router.get("/api/portfolio/alerts", requireAuth, async (req, res, next) => {
   try { await requireFlag("enable_portfolio_analytics"); const highRisk = await RiskAnalysis.countDocuments({ ownerId: req.auth!.userId, "result.riskBand": "high_risk" }); res.json({ alerts: highRisk ? [{ level: "warning", message: `${highRisk} saved simulations are in the high-risk band.` }] : [] }); } catch (error) { next(error); }
 });
 router.post("/api/portfolio/snapshot", requireAuth, async (req, res, next) => {
-  try { await requireFlag("enable_portfolio_analytics"); const job = await getQueues().portfolio.add("portfolio-snapshot", { ownerId: req.auth!.userId }); res.status(202).json({ jobId: String(job.id), status: "queued" }); } catch (error) { next(error); }
+  try { await requireFlag("enable_portfolio_analytics"); const job = await getQueues().portfolio.add("portfolio-snapshot", { ownerId: req.auth!.userId }); await audit(req.requestId, req.auth!.userId, "portfolio_snapshot.queued", { jobId: String(job.id) }); res.status(202).json({ jobId: String(job.id), status: "queued" }); } catch (error) { next(error); }
+});
+router.get("/api/portfolio/snapshots", requireAuth, async (req, res, next) => {
+  try { await requireFlag("enable_portfolio_analytics"); res.json({ snapshots: await PortfolioSnapshot.find({ ownerId: req.auth!.userId }).sort({ createdAt: -1 }).limit(24).lean() }); } catch (error) { next(error); }
 });
 
 router.get("/api/admin/overview", requireAuth, requireAdmin, async (_req, res, next) => {

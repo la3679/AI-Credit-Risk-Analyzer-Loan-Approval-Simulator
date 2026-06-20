@@ -17,4 +17,6 @@ The implementation follows the nine conventional-commit phases in the reimagined
 
 **Phase 7 — Profiles, scenarios, and improvement plans:** implementation complete; awaiting visual/responsive acceptance. Profiles now expose privacy-safe create/read/update/delete controls, saved results create owner-scoped scenarios, Scenario Lab adds animated comparison and removal, and improvement plans are generated from deterministic Autopilot candidates with durable per-item completion tracking. A live Docker API flow verified profile editing, scenario comparison, plan generation, completion updates, and cross-user 404 isolation.
 
-Next: complete visual/responsive acceptance for Phase 7, then begin Phase 8.
+**Phase 8 — Portfolio, reports, and administration:** implementation complete; awaiting visual/responsive acceptance. Portfolio Intelligence now captures owner-scoped BullMQ snapshots and visualizes history; Report Studio queues reports from saved analyses and exposes their lifecycle; the central admin console operates flags, model activation, prompt edits, users, queues, reports, and audit evidence. Report storage is now resolved consistently by API and worker. Docker verification confirmed snapshot persistence, queued PDF completion, authenticated download (HTTP 200), and a structurally valid PDF with its title and simulator disclaimer. Poppler is unavailable in this environment, so raster PDF visual inspection remains for local/browser QA.
+
+Next: complete visual/responsive acceptance for Phase 8, then begin Phase 9.
