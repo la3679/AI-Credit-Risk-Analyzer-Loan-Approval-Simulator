@@ -1,0 +1,3 @@
+import { Sparkles } from "lucide-react";
+import { FeaturePage } from "../../components/feature-page";
+export default function FeaturesPage() { return <FeaturePage eyebrow="Capabilities" title="A complete credit-intelligence workspace." description="Move from a transparent simulated result to scenarios, plans, portfolio signals, queued reports, and controlled administration in one coherent product surface." icon={Sparkles} action={{ label: "Explore the analyzer", href: "/analyzer" }} points={["Deterministic, explainable simulation", "Asynchronous narratives and reports", "Portfolio-level signals with feature controls"]}/>; }

@@ -1,0 +1,3 @@
+import { ChartNoAxesCombined } from "lucide-react";
+import { FeaturePage } from "../../components/feature-page";
+export default function PortfolioPage() { return <FeaturePage eyebrow="Portfolio intelligence" title="Find concentration before it becomes a blind spot." description="Use responsive distributions, DTI clusters, risk-band heatmaps, snapshots, and alerts across your saved simulations." icon={ChartNoAxesCombined} action={{ label: "Open dashboard", href: "/dashboard" }} points={["Queueable portfolio snapshots", "Risk distribution and alert endpoints", "Feature-flagged analytics surface"]}/>; }

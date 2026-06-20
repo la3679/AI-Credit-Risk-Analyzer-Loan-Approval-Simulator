@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root { --ink: #e8f5f3; --muted: #9cb7b5; --surface: #102321; --line: rgba(172, 222, 213, .14); --aqua: #61e6cf; --orange: #f6ad65; }
+* { box-sizing: border-box; }
+html { background: #071411; }
+body { margin: 0; color: var(--ink); background: radial-gradient(circle at 12% 0%, #144c43 0, transparent 30rem), radial-gradient(circle at 80% 20%, #1b3b50 0, transparent 35rem), #071411; font-family: var(--font-sans); }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; }
+.grid-glow { background-image: linear-gradient(rgba(97,230,207,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(97,230,207,.05) 1px, transparent 1px); background-size: 48px 48px; }
+.hero-orb { animation: drift 9s ease-in-out infinite; }.scan-line { animation: scan 4s ease-in-out infinite; }.gauge-ring { animation: gauge-in 900ms cubic-bezier(.22,1,.36,1) both; }
+.glass { background: rgba(16,35,33,.74); border: 1px solid var(--line); box-shadow: 0 24px 80px rgba(0,0,0,.22); backdrop-filter: blur(18px); }
+.button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:.75rem; padding:.72rem 1rem; font-weight:650; transition: transform .2s ease, background .2s ease; cursor:pointer; }
+.button:hover { transform: translateY(-1px); }.button-primary { background: var(--aqua); color:#06201b; }.button-secondary { border:1px solid var(--line); color:var(--ink); background:rgba(255,255,255,.03); }
+.input { width:100%; border:1px solid var(--line); background:rgba(0,0,0,.14); border-radius:.65rem; color:var(--ink); padding:.7rem .8rem; outline:none; }.input:focus { border-color:var(--aqua); box-shadow:0 0 0 3px rgba(97,230,207,.12); }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+@keyframes drift { 50% { transform: translate3d(-18px, 22px, 0) scale(1.08); } }
+@keyframes scan { 50% { transform: translateY(210px); opacity:.2; } }
+@keyframes gauge-in { from { transform: scale(.85); opacity:0; } to { transform:scale(1); opacity:1; } }

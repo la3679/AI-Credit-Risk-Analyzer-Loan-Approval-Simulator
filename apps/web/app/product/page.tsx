@@ -1,0 +1,2 @@
+import { Disclaimer } from "../../components/site-chrome";
+export default function ProductPage() { return <div className="mx-auto max-w-4xl px-5 py-16"><p className="text-sm font-medium text-[#61e6cf]">Product</p><h1 className="mt-2 text-4xl font-semibold">Explainable numbers, human-friendly next steps.</h1><p className="mt-5 leading-8 text-[#b8d3cf]">Credora combines deterministic scoring, scenario comparison, asynchronous AI narratives, reports, and portfolio signals into an inspectable fintech product demo.</p><div className="mt-8"><Disclaimer /></div></div>; }

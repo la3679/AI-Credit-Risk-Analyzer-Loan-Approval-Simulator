@@ -1,0 +1,2 @@
+"use client";
+export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <div className="mx-auto max-w-xl px-5 py-28"><div className="glass rounded-2xl p-7"><h1 className="text-2xl font-semibold">That route lost its signal.</h1><p className="mt-3 text-[#b8d3cf]">No data has been changed. Try again, or return to the dashboard.</p><button className="button button-primary mt-6" onClick={reset}>Try again</button></div></div>; }
