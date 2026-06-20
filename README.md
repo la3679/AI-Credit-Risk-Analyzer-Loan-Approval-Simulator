@@ -26,12 +26,14 @@ npm run dev
 ```
 
 - Web: `http://localhost:3000`
-- API health: `http://localhost:4000/health`
-- API readiness: `http://localhost:4000/ready`
-- OpenAPI: `http://localhost:4000/api/openapi.json`
-- Swagger UI: `http://localhost:4000/api/docs`
+- API health: `http://localhost:4010/health`
+- API readiness: `http://localhost:4010/ready`
+- OpenAPI: `http://localhost:4010/api/openapi.json`
+- Swagger UI: `http://localhost:4010/api/docs`
 
 Demo credentials: `analyst@credora.local` / `CredoraDemo!2026`.
+
+Redis is published on host port `6380` to avoid collisions with other local projects; containers use `redis://redis:6379` internally.
 
 ## AI providers
 

@@ -5,7 +5,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
   MONGODB_URI: z.string().default("mongodb://root:example@localhost:27017/credora?authSource=admin"),
-  REDIS_URL: z.string().default("redis://localhost:6379"),
+  REDIS_URL: z.string().default("redis://localhost:6380"),
   WEB_ORIGIN: z.string().default("http://localhost:3000"),
   JWT_ACCESS_SECRET: z.string().min(32).default("development-only-secret-change-me-please"),
   ACCESS_TOKEN_TTL: z.string().default("15m"),
