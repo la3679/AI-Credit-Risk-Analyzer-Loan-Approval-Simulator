@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { calculateRisk, DEFAULT_RISK_MODEL, featureFlagKeys, financialInputSchema, loginSchema, signupSchema } from "@credora/shared";
-import { AuditLog, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, RiskModel, Session, User } from "./models";
+import { AIPromptTemplate, AuditLog, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, RiskModel, Session, User } from "./models";
 import { clearSessionCookies, issueSession, requireAdmin, requireAuth, rotateSession } from "./auth";
 import { ApiError } from "./errors";
 import { getFeatureFlags, requireFlag } from "./flags";
@@ -284,6 +284,19 @@ router.post("/api/admin/risk-model-configs", requireAuth, requireAdmin, async (r
 });
 router.patch("/api/admin/risk-model-configs/:id/activate", requireAuth, requireAdmin, async (req, res, next) => {
   try { await requireFlag("enable_admin_model_editor"); const target = await RiskModel.findById(req.params.id); if (!target) throw new ApiError(404, "NOT_FOUND", "Model configuration was not found."); await RiskModel.updateMany({}, { active: false }); await RiskModel.updateOne({ _id: target._id }, { active: true }); await audit(req.requestId, req.auth!.userId, "risk_model.activated", { modelId: req.params.id }); res.json({ id: String(target._id), active: true }); } catch (error) { next(error); }
+});
+router.get("/api/admin/ai-prompts", requireAuth, requireAdmin, async (_req, res, next) => { try { res.json({ prompts: await AIPromptTemplate.find({}).sort({ updatedAt: -1 }).lean() }); } catch (error) { next(error); } });
+router.post("/api/admin/ai-prompts", requireAuth, requireAdmin, async (req, res, next) => {
+  try { const body = z.object({ key: z.string().min(2).max(80), content: z.string().min(20).max(10_000), active: z.boolean().default(true) }).parse(req.body); const prompt = await AIPromptTemplate.create({ ...body, updatedBy: req.auth!.userId }); await audit(req.requestId, req.auth!.userId, "ai_prompt.created", { key: body.key }); res.status(201).json({ prompt }); } catch (error) { next(error); }
+});
+router.patch("/api/admin/ai-prompts/:id", requireAuth, requireAdmin, async (req, res, next) => {
+  try { const body = z.object({ content: z.string().min(20).max(10_000).optional(), active: z.boolean().optional() }).parse(req.body); const prompt = await AIPromptTemplate.findByIdAndUpdate(req.params.id, { ...body, updatedBy: req.auth!.userId, $inc: { version: 1 } }, { new: true }); if (!prompt) throw new ApiError(404, "NOT_FOUND", "Prompt template was not found."); await audit(req.requestId, req.auth!.userId, "ai_prompt.updated", { promptId: req.params.id }); res.json({ prompt }); } catch (error) { next(error); }
+});
+router.get("/api/admin/ai-providers", requireAuth, requireAdmin, async (_req, res, next) => {
+  try { res.json({ selected: process.env.AI_PROVIDER ?? "mock", providers: ["mock", "openai", "anthropic", "openrouter", "groq", "together", "ollama", "gemini"], openAiFeatureEnabled: (await getFeatureFlags()).enable_openai_provider }); } catch (error) { next(error); }
+});
+router.get("/api/admin/jobs", requireAuth, requireAdmin, async (_req, res, next) => {
+  try { const queues = getQueues(); const counts = await Promise.all(Object.entries(queues).map(async ([name, queue]) => [name, await queue.getJobCounts("waiting", "active", "completed", "failed", "delayed")])); res.json({ queues: Object.fromEntries(counts) }); } catch (error) { next(error); }
 });
 router.get("/api/admin/reports", requireAuth, requireAdmin, async (_req, res, next) => { try { res.json({ reports: await Report.find({}).sort({ createdAt: -1 }).lean() }); } catch (error) { next(error); } });
 router.get("/api/admin/audit-logs", requireAuth, requireAdmin, async (_req, res, next) => { try { res.json({ logs: await AuditLog.find({}).sort({ createdAt: -1 }).limit(500).lean() }); } catch (error) { next(error); } });

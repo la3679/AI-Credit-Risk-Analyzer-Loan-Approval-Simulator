@@ -87,6 +87,15 @@ const portfolioSnapshotSchema = new mongoose.Schema({
 }, { timestamps: { createdAt: true, updatedAt: false } });
 export const PortfolioSnapshot = mongoose.models.PortfolioSnapshot || mongoose.model("PortfolioSnapshot", portfolioSnapshotSchema);
 
+const aiPromptTemplateSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  version: { type: Number, required: true, default: 1 },
+  content: { type: String, required: true },
+  active: { type: Boolean, default: true },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+}, timestamps);
+export const AIPromptTemplate = mongoose.models.AIPromptTemplate || mongoose.model("AIPromptTemplate", aiPromptTemplateSchema);
+
 const reportSchema = new mongoose.Schema({
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
   analysisId: { type: mongoose.Schema.Types.ObjectId, ref: "RiskAnalysis" },

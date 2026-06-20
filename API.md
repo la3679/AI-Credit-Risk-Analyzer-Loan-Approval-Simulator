@@ -32,6 +32,7 @@ Reports transition through `queued`, `processing`, `completed`, `failed`, `expir
 
 - `GET /api/admin/overview`, `GET|PATCH /api/admin/users/:id`
 - `GET|POST /api/admin/risk-model-configs`, `PATCH /api/admin/risk-model-configs/:id/activate`
-- `GET /api/admin/reports`, `GET /api/admin/audit-logs`
+- `GET|POST /api/admin/ai-prompts`, `PATCH /api/admin/ai-prompts/:id`, `GET /api/admin/ai-providers`
+- `GET /api/admin/reports`, `GET /api/admin/jobs`, `GET /api/admin/audit-logs`
 
 All non-admin resource reads and writes include `ownerId` in their MongoDB filters. Admin endpoints have independent role checks.
