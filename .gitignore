@@ -38,3 +38,8 @@ yarn-error.log*
 
 # Vite
 *.timestamp-*
+
+# Next.js / generated reports
+.next/
+storage/
+*.tsbuildinfo
