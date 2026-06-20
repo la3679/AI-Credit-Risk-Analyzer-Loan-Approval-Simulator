@@ -1,0 +1,25 @@
+{
+  "name": "@credora/worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/worker.ts",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@credora/shared": "*",
+    "bullmq": "^5.40.1",
+    "ioredis": "^5.6.1",
+    "mongoose": "^8.13.2",
+    "pdfkit": "^0.16.0",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/pdfkit": "^0.13.7",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
