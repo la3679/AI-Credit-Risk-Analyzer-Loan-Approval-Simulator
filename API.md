@@ -18,13 +18,13 @@ All JSON errors follow `{ "error": { "code", "message", "requestId", "details?" 
 ## Scenario and improvement workspace
 
 - `GET|POST /api/scenarios`, `GET|PATCH|DELETE /api/scenarios/:id`, `POST /api/scenarios/compare`
-- `GET|POST /api/improvement-plans`, `GET|PATCH /api/improvement-plans/:id`, `PATCH /api/improvement-plans/:id/items/:itemId`
+- `GET|POST /api/improvement-plans`, `GET|PATCH|DELETE /api/improvement-plans/:id`, `PATCH /api/improvement-plans/:id/items/:itemId`, `POST /api/improvement-plans/from-autopilot`
 - `POST /api/ai/underwriting-memo`, `POST /api/ai/borrower-explanation`, `POST /api/ai/improvement-plan`, `POST /api/ai/scenario-summary`, `POST /api/ai/portfolio-insights`
 
 ## Reports and portfolio
 
 - `GET|POST /api/reports`, `GET|DELETE /api/reports/:id`, `GET /api/reports/:id/download`
-- `GET /api/portfolio/summary`, `GET /api/portfolio/risk-distribution`, `GET /api/portfolio/alerts`, `POST /api/portfolio/snapshot`
+- `GET /api/portfolio/summary`, `GET /api/portfolio/risk-distribution`, `GET /api/portfolio/alerts`, `GET /api/portfolio/snapshots`, `POST /api/portfolio/snapshot`
 
 Reports transition through `queued`, `processing`, `completed`, `failed`, `expired`, and `deleted`. Creation and AI/portfolio work return `202 Accepted` with a BullMQ job ID.
 

@@ -4,6 +4,8 @@
 - [Express](https://expressjs.com/)
 - [MongoDB Node.js driver and Mongoose](https://mongoosejs.com/)
 - [BullMQ](https://docs.bullmq.io/)
+- [Docker Compose](https://docs.docker.com/compose/)
+- [Render Blueprints](https://render.com/docs/infrastructure-as-code)
 - [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
 - [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 

@@ -10,5 +10,6 @@ COPY . .
 ARG API_ORIGIN=http://api:4000
 ENV API_ORIGIN=$API_ORIGIN
 RUN npm run build -w @credora/web
+RUN if [ -d apps/web/public ]; then cp -r apps/web/public apps/web/.next/standalone/apps/web/public; fi && cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
 EXPOSE 3000
-CMD ["npm", "run", "start", "-w", "@credora/web"]
+CMD ["node", "apps/web/.next/standalone/apps/web/server.js"]

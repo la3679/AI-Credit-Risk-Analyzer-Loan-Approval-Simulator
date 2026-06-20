@@ -7,4 +7,4 @@ COPY apps/web/package.json apps/web/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN npm install
 COPY . .
-CMD ["npm", "run", "dev", "-w", "@credora/worker"]
+CMD ["npm", "run", "start", "-w", "@credora/worker"]

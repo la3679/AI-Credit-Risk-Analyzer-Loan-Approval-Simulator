@@ -8,4 +8,4 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN npm install
 COPY . .
 EXPOSE 4000
-CMD ["npm", "run", "dev", "-w", "@credora/api"]
+CMD ["npm", "run", "start", "-w", "@credora/api"]

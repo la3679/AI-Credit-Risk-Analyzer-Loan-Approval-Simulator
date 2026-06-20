@@ -44,3 +44,7 @@ The provider interface supports OpenAI, Anthropic, OpenRouter, Groq, Together AI
 The scoring model accepts financial and loan fields only. It does not collect or score race, religion, ethnicity, gender, disability, marital status, national origin, or similar protected attributes. Credora makes no ECOA/FCRA-compliance claim and does not claim training on real lending data.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), [SOURCES.md](SOURCES.md), and [DEPLOYMENT.md](DEPLOYMENT.md) for implementation and operations guidance.
+
+For a Render deployment, import `render.yaml`, configure the required environment values, and follow the [deployment promotion checklist](DEPLOYMENT.md#promotion-checklist). Render services require shared object storage before production report downloads are enabled.
+
+The Docker production verification path is `docker compose up --build -d`, followed by `/health`, `/ready`, and a same-origin request through `http://localhost:3000/api/feature-flags`.
