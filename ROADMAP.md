@@ -11,4 +11,6 @@ The implementation follows the nine conventional-commit phases in the reimagined
 - **Phase 4 — Explainable risk engine v2:** complete. Inputs and model configurations are strictly validated; deterministic scoring calculates payment, DTI, risk bands, decisions, APR ranges, warnings, and factor explanations; results retain the exact model version. Eight unit tests cover formulas, boundaries, validation, factors, warnings, and Autopilot ranking.
 - **Phases 5–12:** implementation work exists in varying degrees, but none are accepted until their individual runtime and test acceptance criteria have been verified.
 
-Next: verify and complete the Risk Analyzer and Results Experience for Phase 5.
+**Phase 5 — Risk analyzer and results experience:** implementation complete; awaiting visual/responsive acceptance. A three-step, mobile-friendly analyzer validates permitted financial inputs before saving an analysis. The animated results experience includes a risk gauge, approval signal, DTI, payment, APR, affordability, factor waterfall, warnings, Autopilot candidates, and actions for scenarios, memos, and reports. Production build, unit tests, and a live authenticated Docker MongoDB/Redis create/retrieve/invalid-input flow passed; visual QA remains with the product owner because browser automation is unavailable in this environment.
+
+Next: complete visual/responsive acceptance for Phase 5, then begin Phase 6.
