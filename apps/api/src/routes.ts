@@ -33,6 +33,7 @@ router.post("/api/auth/login", async (req, res, next) => {
     const input = loginSchema.parse(req.body);
     const user = await User.findOne({ email: input.email, isGuest: { $ne: true } });
     if (!user || !(await argon2.verify(user.passwordHash, input.password))) throw new ApiError(401, "INVALID_CREDENTIALS", "Email or password is incorrect.");
+    if (user.disabledAt) throw new ApiError(403, "ACCOUNT_DISABLED", "This account has been disabled.");
     await issueSession(res, user, req);
     await audit(req.requestId, String(user._id), "auth.login");
     res.json({ user: safeUser(user) });

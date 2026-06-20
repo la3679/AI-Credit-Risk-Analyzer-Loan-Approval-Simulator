@@ -57,6 +57,7 @@ export async function rotateSession(req: Request, res: Response) {
   await Session.updateOne({ _id: session._id }, { revokedAt: new Date() });
   const user = await User.findById(session.ownerId);
   if (!user) throw new ApiError(401, "INVALID_REFRESH", "Your session has expired. Please sign in again.");
+  if (user.disabledAt) throw new ApiError(403, "ACCOUNT_DISABLED", "This account has been disabled.");
   return issueSession(res, user, req);
 }
 
@@ -72,6 +73,11 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
     if (!token) throw new ApiError(401, "UNAUTHENTICATED", "Sign in is required.");
     const { payload } = await jwtVerify(token, jwtSecret);
     if (!payload.sub || !payload.sid || (payload.role !== "user" && payload.role !== "admin" && payload.role !== "guest")) throw new ApiError(401, "UNAUTHENTICATED", "Sign in is required.");
+    const [session, user] = await Promise.all([
+      Session.exists({ _id: String(payload.sid), ownerId: payload.sub, revokedAt: null, expiresAt: { $gt: new Date() } }),
+      User.exists({ _id: payload.sub, disabledAt: null }),
+    ]);
+    if (!session || !user) throw new ApiError(401, "UNAUTHENTICATED", "Sign in is required.");
     req.auth = { userId: payload.sub, sessionId: String(payload.sid), role: payload.role };
     next();
   } catch (error) { next(error instanceof ApiError ? error : new ApiError(401, "UNAUTHENTICATED", "Sign in is required.")); }
