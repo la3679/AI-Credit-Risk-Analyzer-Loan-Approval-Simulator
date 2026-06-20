@@ -42,7 +42,7 @@ export function ResultClient({ id }: { id: string }) {
         const memo = await apiFetch<{ status: MemoStatus }>("/api/ai/underwriting-memo", { method: "POST", body: JSON.stringify({ analysisId: id, regenerate: analysis?.aiMemoStatus === "completed" }) });
         setAnalysis((current) => current ? { ...current, aiMemoStatus: memo.status } : current);
       }
-      if (kind === "scenario" && analysis) await apiFetch("/api/scenarios", { method: "POST", body: JSON.stringify({ name: "New scenario", inputs: analysis.input }) });
+      if (kind === "scenario" && analysis) await apiFetch("/api/scenarios", { method: "POST", body: JSON.stringify({ name: "Saved result scenario", baseAnalysisId: id, inputs: analysis.input }) });
       setStatus(kind === "memo" ? "Memo job queued. This page will update when it is ready." : kind === "report" ? "Report job queued." : "Scenario saved.");
     } catch (cause) { setStatus(cause instanceof Error ? cause.message : "Action failed."); }
   }

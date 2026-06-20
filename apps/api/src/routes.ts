@@ -136,9 +136,12 @@ router.post("/api/profiles", requireAuth, async (req, res, next) => {
     res.status(201).json({ profile });
   } catch (error) { next(error); }
 });
+router.get("/api/profiles/:id", requireAuth, async (req, res, next) => {
+  try { const profile = await BorrowerProfile.findOne({ _id: req.params.id, ownerId: req.auth!.userId }).lean(); if (!profile) throw new ApiError(404, "NOT_FOUND", "Profile was not found."); res.json({ profile }); } catch (error) { next(error); }
+});
 router.patch("/api/profiles/:id", requireAuth, async (req, res, next) => {
   try {
-    const input = z.object({ displayName: z.string().min(1).max(100).optional(), notes: z.string().max(2_000).optional(), tags: z.array(z.string().max(32)).max(10).optional() }).parse(req.body);
+    const input = z.object({ displayName: z.string().min(1).max(100).optional(), anonymized: z.boolean().optional(), baselineFinancials: financialInputSchema.optional(), notes: z.string().max(2_000).optional(), tags: z.array(z.string().max(32)).max(10).optional() }).parse(req.body);
     const profile = await BorrowerProfile.findOneAndUpdate({ _id: req.params.id, ownerId: req.auth!.userId }, input, { new: true });
     if (!profile) throw new ApiError(404, "NOT_FOUND", "Profile was not found.");
     res.json({ profile });
@@ -204,10 +207,24 @@ router.get("/api/improvement-plans/:id", requireAuth, async (req, res, next) => 
   try { const plan = await ImprovementPlan.findOne({ _id: req.params.id, ownerId: req.auth!.userId }).lean(); if (!plan) throw new ApiError(404, "NOT_FOUND", "Improvement plan was not found."); res.json({ plan }); } catch (error) { next(error); }
 });
 router.patch("/api/improvement-plans/:id", requireAuth, async (req, res, next) => {
-  try { const body = z.object({ title: z.string().min(3).max(160) }).parse(req.body); const plan = await ImprovementPlan.findOneAndUpdate({ _id: req.params.id, ownerId: req.auth!.userId }, body, { new: true }); if (!plan) throw new ApiError(404, "NOT_FOUND", "Improvement plan was not found."); res.json({ plan }); } catch (error) { next(error); }
+  try { const body = z.object({ title: z.string().min(3).max(160).optional(), items: z.array(z.object({ title: z.string().min(2), description: z.string().min(2), priority: z.enum(["high", "medium", "low"]), estimatedImpact: z.number(), completed: z.boolean().default(false) })).min(1).max(12).optional() }).parse(req.body); const plan = await ImprovementPlan.findOneAndUpdate({ _id: req.params.id, ownerId: req.auth!.userId }, body, { new: true }); if (!plan) throw new ApiError(404, "NOT_FOUND", "Improvement plan was not found."); res.json({ plan }); } catch (error) { next(error); }
 });
 router.patch("/api/improvement-plans/:id/items/:itemId", requireAuth, async (req, res, next) => {
   try { const body = z.object({ completed: z.boolean() }).parse(req.body); const plan = await ImprovementPlan.findOneAndUpdate({ _id: req.params.id, ownerId: req.auth!.userId, "items._id": req.params.itemId }, { $set: { "items.$.completed": body.completed } }, { new: true }); if (!plan) throw new ApiError(404, "NOT_FOUND", "Plan item was not found."); res.json({ plan }); } catch (error) { next(error); }
+});
+router.delete("/api/improvement-plans/:id", requireAuth, async (req, res, next) => {
+  try { const result = await ImprovementPlan.deleteOne({ _id: req.params.id, ownerId: req.auth!.userId }); if (!result.deletedCount) throw new ApiError(404, "NOT_FOUND", "Improvement plan was not found."); res.status(204).end(); } catch (error) { next(error); }
+});
+router.post("/api/improvement-plans/from-autopilot", requireAuth, async (req, res, next) => {
+  try {
+    const body = z.object({ analysisId: z.string(), title: z.string().min(3).max(160).optional() }).parse(req.body);
+    const analysis = await RiskAnalysis.findOne({ _id: body.analysisId, ownerId: req.auth!.userId });
+    if (!analysis) throw new ApiError(404, "NOT_FOUND", "Analysis was not found.");
+    const candidates = generateWhatIfAutopilot(analysis.input as any).slice(0, 4);
+    const plan = await ImprovementPlan.create({ ownerId: req.auth!.userId, analysisId: analysis._id, title: body.title ?? "Autopilot improvement plan", items: candidates.map((candidate) => ({ title: candidate.title, description: candidate.tradeoff, priority: candidate.approvalProbabilityDelta >= 0.1 ? "high" : "medium", estimatedImpact: Math.round(candidate.approvalProbabilityDelta * 100), completed: false })) });
+    await audit(req.requestId, req.auth!.userId, "improvement_plan.created_from_autopilot", { planId: String(plan._id), analysisId: String(analysis._id) });
+    res.status(201).json({ plan });
+  } catch (error) { next(error); }
 });
 
 router.post("/api/reports", requireAuth, async (req, res, next) => {

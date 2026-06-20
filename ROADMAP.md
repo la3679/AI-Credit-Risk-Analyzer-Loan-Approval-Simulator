@@ -15,4 +15,6 @@ The implementation follows the nine conventional-commit phases in the reimagined
 
 **Phase 6 — Queued, provider-agnostic AI narratives:** implementation complete; awaiting visual/responsive acceptance. The AI worker now persists memo lifecycle states, job IDs, provider/fallback metadata, errors, and generated timestamps. The result view polls queued work and presents safe, bounded narrative states. Approved prompt templates are retrieved by the worker, and mock, OpenAI, Anthropic, OpenRouter, Groq, Together, Ollama, and Gemini adapters remain available behind the provider contract. Live Docker verification confirmed `queued → completed` with the mock provider and simulator disclaimer; `enable_ai_memos` denied queueing with a server-side 403 when disabled.
 
-Next: complete visual/responsive acceptance for Phase 6, then begin Phase 7.
+**Phase 7 — Profiles, scenarios, and improvement plans:** implementation complete; awaiting visual/responsive acceptance. Profiles now expose privacy-safe create/read/update/delete controls, saved results create owner-scoped scenarios, Scenario Lab adds animated comparison and removal, and improvement plans are generated from deterministic Autopilot candidates with durable per-item completion tracking. A live Docker API flow verified profile editing, scenario comparison, plan generation, completion updates, and cross-user 404 isolation.
+
+Next: complete visual/responsive acceptance for Phase 7, then begin Phase 8.
