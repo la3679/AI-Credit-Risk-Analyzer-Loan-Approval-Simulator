@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { calculateRisk, DEFAULT_RISK_MODEL, featureFlagKeys, financialInputSchema, loginSchema, signupSchema } from "@credora/shared";
+import { calculateRisk, DEFAULT_RISK_MODEL, featureFlagKeys, financialInputSchema, generateWhatIfAutopilot, loginSchema, signupSchema } from "@credora/shared";
 import { AIPromptTemplate, AuditLog, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, RiskModel, Session, User } from "./models";
 import { clearSessionCookies, issueSession, requireAdmin, requireAuth, rotateSession } from "./auth";
 import { ApiError } from "./errors";
@@ -93,6 +93,14 @@ router.post("/api/risk/analyze", requireAuth, async (req, res, next) => {
     const saved = await RiskAnalysis.create({ ownerId: req.auth!.userId, input, ...analysis });
     await audit(req.requestId, req.auth!.userId, "risk.analysis_created", { analysisId: String(saved._id) });
     res.status(201).json({ id: String(saved._id), ...analysis });
+  } catch (error) { next(error); }
+});
+router.post("/api/risk/autopilot", requireAuth, async (req, res, next) => {
+  try {
+    const input = financialInputSchema.parse(req.body);
+    const active: any = await RiskModel.findOne({ active: true }).sort({ updatedAt: -1 }).lean();
+    const candidates = generateWhatIfAutopilot(input, (active?.config as typeof DEFAULT_RISK_MODEL) ?? DEFAULT_RISK_MODEL);
+    res.json({ candidates, disclaimer: "Improvement paths are educational simulations, not financial advice or lending recommendations." });
   } catch (error) { next(error); }
 });
 

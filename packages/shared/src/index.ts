@@ -122,6 +122,16 @@ export interface RiskModelConfig {
   };
 }
 
+export interface AutopilotCandidate {
+  id: string;
+  title: string;
+  tradeoff: string;
+  input: FinancialInput;
+  result: RiskAnalysisResult;
+  approvalProbabilityDelta: number;
+  dtiDelta: number;
+}
+
 export const DEFAULT_RISK_MODEL: RiskModelConfig = {
   version: "v2.0.0",
   baseScore: 52,
@@ -183,10 +193,28 @@ export function calculateRisk(input: FinancialInput, model: RiskModelConfig = DE
   if ((input.missedPaymentsLast12Months ?? 0) > 0) negativeFactors.push({ label: "Recent missed payments", direction: "negative", impact: -8, explanation: "Recent missed payments increase simulated risk." });
   const warnings = ["Estimated simulated APR range is for educational/demo purposes only."];
   if (dtiAfterLoan > 0.5) warnings.push("Projected debt obligations exceed 50% of monthly income.");
+  if (input.monthlyDebt > monthlyIncome) warnings.push("Monthly debt exceeds monthly income; review the entered figures.");
+  if (input.requestedLoanAmount > input.annualIncome) warnings.push("Requested amount is high relative to annual income.");
+  if (input.employmentYears === undefined || input.creditUtilization === undefined) warnings.push("Some optional stability inputs are missing, reducing the richness of this educational simulation.");
   if (!positiveFactors.length && !negativeFactors.length) warnings.push("This result is a simplified educational simulation, not an underwriting decision.");
   return {
     derived: { monthlyIncome: round(monthlyIncome), estimatedMonthlyPayment: round(estimatedMonthlyPayment), dtiBeforeLoan: round(dtiBeforeLoan), dtiAfterLoan: round(dtiAfterLoan), loanToIncomeRatio: round(loanToIncomeRatio) },
     result: { approvalProbability, riskScore, riskBand, simulatedDecision, suggestedAprMin: round(Math.max(4.9, aprCenter - 1.4)), suggestedAprMax: round(Math.min(36, aprCenter + 1.4)), affordabilityGrade: dtiAfterLoan <= 0.28 ? "A" : dtiAfterLoan <= 0.36 ? "B" : dtiAfterLoan <= 0.43 ? "C" : dtiAfterLoan <= 0.5 ? "D" : "F" },
     explanation: { positiveFactors, negativeFactors, warnings, modelVersion: model.version },
   };
+}
+
+export function generateWhatIfAutopilot(input: FinancialInput, model: RiskModelConfig = DEFAULT_RISK_MODEL): AutopilotCandidate[] {
+  const baseline = calculateRisk(input, model);
+  const candidates = [
+    { id: "lower-loan", title: "Reduce requested amount by 10%", tradeoff: "Lower proceeds may require postponing part of the purchase.", input: { ...input, requestedLoanAmount: Math.round(input.requestedLoanAmount * .9) } },
+    { id: "lower-debt", title: "Reduce monthly debt by 15%", tradeoff: "Requires paying down or refinancing existing obligations.", input: { ...input, monthlyDebt: Math.round(input.monthlyDebt * .85) } },
+    { id: "larger-down-payment", title: "Increase down payment by $2,000", tradeoff: "Requires additional cash up front.", input: { ...input, downPayment: (input.downPayment ?? 0) + 2_000 } },
+    { id: "longer-term", title: "Extend the term by 12 months", tradeoff: "May lower the payment while increasing total interest over time.", input: { ...input, loanTermMonths: Math.min(120, input.loanTermMonths + 12) } },
+    { id: "higher-score", title: "Model a 30-point credit-score improvement", tradeoff: "Credit-score improvements take time and are not guaranteed.", input: { ...input, creditScore: Math.min(850, input.creditScore + 30) } },
+  ];
+  return candidates.map((candidate) => {
+    const result = calculateRisk(candidate.input, model);
+    return { ...candidate, result, approvalProbabilityDelta: round(result.result.approvalProbability - baseline.result.approvalProbability, 4), dtiDelta: round(result.derived.dtiAfterLoan - baseline.derived.dtiAfterLoan, 4) };
+  }).sort((a, b) => b.approvalProbabilityDelta - a.approvalProbabilityDelta);
 }

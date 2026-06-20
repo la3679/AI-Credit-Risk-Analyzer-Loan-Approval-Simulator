@@ -1,3 +1,2 @@
-import { Gauge } from "lucide-react";
-import { FeaturePage } from "../../../../components/feature-page";
-export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; return <FeaturePage eyebrow={`Saved result · ${id.slice(0, 8)}`} title="A result page built for explanation." description="This route presents the animated risk gauge, factor waterfall, affordability metrics, queued narrative state, and report creation for one owner-scoped analysis." icon={Gauge} action={{ label: "Back to analyzer", href: "/analyzer" }} points={["Risk gauge and band", "Positive/negative factor waterfall", "Async memo and report actions"]}/>; }
+import { ResultClient } from "./result-client";
+export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; return <ResultClient id={id}/>; }

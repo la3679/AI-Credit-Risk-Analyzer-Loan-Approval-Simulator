@@ -12,7 +12,7 @@ All JSON errors follow `{ "error": { "code", "message", "requestId", "details?" 
 ## Borrowers, analysis, and loan simulation
 
 - `GET|POST /api/profiles`, `GET|PATCH|DELETE /api/profiles/:id`
-- `POST /api/risk/analyze`, `GET /api/risk/analyses`, `GET /api/risk/analyses/:id`
+- `POST /api/risk/analyze`, `POST /api/risk/autopilot`, `GET /api/risk/analyses`, `GET /api/risk/analyses/:id`
 - `POST /api/loans/simulate`, `POST /api/loans/payment-estimate`, `POST /api/loans/apr-estimate`
 
 ## Scenario and improvement workspace
