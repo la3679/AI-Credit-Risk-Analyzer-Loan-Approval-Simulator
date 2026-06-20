@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { calculateRisk, DEFAULT_RISK_MODEL, featureFlagKeys, financialInputSchema, generateWhatIfAutopilot, loginSchema, signupSchema } from "@credora/shared";
+import { calculateRisk, DEFAULT_RISK_MODEL, featureFlagKeys, financialInputSchema, generateWhatIfAutopilot, loginSchema, riskModelConfigSchema, signupSchema } from "@credora/shared";
 import { AIPromptTemplate, AuditLog, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, RiskModel, Session, User } from "./models";
 import { clearSessionCookies, issueSession, requireAdmin, requireAuth, rotateSession } from "./auth";
 import { ApiError } from "./errors";
@@ -90,7 +90,7 @@ router.post("/api/risk/analyze", requireAuth, async (req, res, next) => {
   try {
     const input = financialInputSchema.parse(req.body);
     const active: any = await RiskModel.findOne({ active: true }).sort({ updatedAt: -1 }).lean();
-    const analysis = calculateRisk(input, (active?.config as typeof DEFAULT_RISK_MODEL) ?? DEFAULT_RISK_MODEL);
+    const analysis = calculateRisk(input, active ? riskModelConfigSchema.parse(active.config) : DEFAULT_RISK_MODEL);
     const saved = await RiskAnalysis.create({ ownerId: req.auth!.userId, input, ...analysis });
     await audit(req.requestId, req.auth!.userId, "risk.analysis_created", { analysisId: String(saved._id) });
     res.status(201).json({ id: String(saved._id), ...analysis });
@@ -100,7 +100,7 @@ router.post("/api/risk/autopilot", requireAuth, async (req, res, next) => {
   try {
     const input = financialInputSchema.parse(req.body);
     const active: any = await RiskModel.findOne({ active: true }).sort({ updatedAt: -1 }).lean();
-    const candidates = generateWhatIfAutopilot(input, (active?.config as typeof DEFAULT_RISK_MODEL) ?? DEFAULT_RISK_MODEL);
+    const candidates = generateWhatIfAutopilot(input, active ? riskModelConfigSchema.parse(active.config) : DEFAULT_RISK_MODEL);
     res.json({ candidates, disclaimer: "Improvement paths are educational simulations, not financial advice or lending recommendations." });
   } catch (error) { next(error); }
 });
@@ -289,7 +289,7 @@ router.get("/api/admin/risk-model-configs", requireAuth, requireAdmin, async (_r
   try { res.json({ configs: await RiskModel.find({}).sort({ updatedAt: -1 }).lean() }); } catch (error) { next(error); }
 });
 router.post("/api/admin/risk-model-configs", requireAuth, requireAdmin, async (req, res, next) => {
-  try { await requireFlag("enable_admin_model_editor"); const body = z.object({ version: z.string().min(1), config: z.any() }).parse(req.body); const config = await RiskModel.create({ ...body, active: false, ownerId: req.auth!.userId }); await audit(req.requestId, req.auth!.userId, "risk_model.created", { version: body.version }); res.status(201).json({ config }); } catch (error) { next(error); }
+  try { await requireFlag("enable_admin_model_editor"); const configInput = riskModelConfigSchema.parse(req.body.config); const config = await RiskModel.create({ version: configInput.version, config: configInput, active: false, ownerId: req.auth!.userId }); await audit(req.requestId, req.auth!.userId, "risk_model.created", { version: configInput.version }); res.status(201).json({ config }); } catch (error) { next(error); }
 });
 router.patch("/api/admin/risk-model-configs/:id/activate", requireAuth, requireAdmin, async (req, res, next) => {
   try { await requireFlag("enable_admin_model_editor"); const target = await RiskModel.findById(req.params.id); if (!target) throw new ApiError(404, "NOT_FOUND", "Model configuration was not found."); await RiskModel.updateMany({}, { active: false }); await RiskModel.updateOne({ _id: target._id }, { active: true }); await audit(req.requestId, req.auth!.userId, "risk_model.activated", { modelId: req.params.id }); res.json({ id: String(target._id), active: true }); } catch (error) { next(error); }

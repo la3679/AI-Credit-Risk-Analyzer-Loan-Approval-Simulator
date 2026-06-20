@@ -46,7 +46,7 @@ export const financialInputSchema = z.object({
   previousDefaults: z.number().int().min(0).max(10).optional(),
   downPayment: z.number().min(0).max(5_000_000).optional(),
   housingStatus: z.enum(["rent", "own", "family", "other"]).optional(),
-});
+}).strict();
 export type FinancialInput = z.infer<typeof financialInputSchema>;
 
 export const riskFactorSchema = z.object({
@@ -107,20 +107,21 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enable_openai_provider: false,
 };
 
-export interface RiskModelConfig {
-  version: string;
-  baseScore: number;
-  weights: {
-    creditScore: number;
-    income: number;
-    dti: number;
-    loanToIncome: number;
-    employmentYears: number;
-    utilization: number;
-    missedPayments: number;
-    defaults: number;
-  };
-}
+export const riskModelConfigSchema = z.object({
+  version: z.string().trim().min(1).max(64),
+  baseScore: z.number().min(0).max(100),
+  weights: z.object({
+    creditScore: z.number().min(-100).max(100),
+    income: z.number().min(-100).max(100),
+    dti: z.number().min(-100).max(100),
+    loanToIncome: z.number().min(-100).max(100),
+    employmentYears: z.number().min(-100).max(100),
+    utilization: z.number().min(-100).max(100),
+    missedPayments: z.number().min(-100).max(100),
+    defaults: z.number().min(-100).max(100),
+  }).strict(),
+}).strict();
+export type RiskModelConfig = z.infer<typeof riskModelConfigSchema>;
 
 export interface AutopilotCandidate {
   id: string;
@@ -147,6 +148,14 @@ export const DEFAULT_RISK_MODEL: RiskModelConfig = {
   },
 };
 
+export function getRiskBand(riskScore: number): RiskAnalysisResult["result"]["riskBand"] {
+  return riskScore >= 90 ? "excellent" : riskScore >= 75 ? "good" : riskScore >= 60 ? "fair" : riskScore >= 45 ? "borderline" : "high_risk";
+}
+
+export function getSimulatedDecision(riskScore: number): RiskAnalysisResult["result"]["simulatedDecision"] {
+  return riskScore >= 75 ? "likely_approved" : riskScore >= 55 ? "manual_review" : "likely_declined";
+}
+
 const round = (value: number, decimals = 2) => Number(value.toFixed(decimals));
 const sigmoid = (value: number) => 1 / (1 + Math.exp(-value));
 
@@ -157,6 +166,7 @@ export function calculateMonthlyPayment(principal: number, annualRate: number, t
 }
 
 export function calculateRisk(input: FinancialInput, model: RiskModelConfig = DEFAULT_RISK_MODEL): RiskAnalysisResult {
+  const validatedModel = riskModelConfigSchema.parse(model);
   const monthlyIncome = input.annualIncome / 12;
   const provisionalRate = 12;
   const estimatedMonthlyPayment = calculateMonthlyPayment(input.requestedLoanAmount - (input.downPayment ?? 0), provisionalRate, input.loanTermMonths);
@@ -168,19 +178,19 @@ export function calculateRisk(input: FinancialInput, model: RiskModelConfig = DE
   const utilization = input.creditUtilization ?? 0.3;
   const employment = Math.min((input.employmentYears ?? 1) / 10, 1);
 
-  let raw = model.baseScore;
-  raw += credit * model.weights.creditScore;
-  raw += income * model.weights.income;
-  raw -= Math.min(dtiAfterLoan, 1) * model.weights.dti;
-  raw -= Math.min(loanToIncomeRatio, 1.5) * model.weights.loanToIncome;
-  raw += employment * model.weights.employmentYears;
-  raw -= utilization * model.weights.utilization;
-  raw -= Math.min((input.missedPaymentsLast12Months ?? 0) / 6, 1) * model.weights.missedPayments;
-  raw -= Math.min((input.previousDefaults ?? 0) / 2, 1) * model.weights.defaults;
+  let raw = validatedModel.baseScore;
+  raw += credit * validatedModel.weights.creditScore;
+  raw += income * validatedModel.weights.income;
+  raw -= Math.min(dtiAfterLoan, 1) * validatedModel.weights.dti;
+  raw -= Math.min(loanToIncomeRatio, 1.5) * validatedModel.weights.loanToIncome;
+  raw += employment * validatedModel.weights.employmentYears;
+  raw -= utilization * validatedModel.weights.utilization;
+  raw -= Math.min((input.missedPaymentsLast12Months ?? 0) / 6, 1) * validatedModel.weights.missedPayments;
+  raw -= Math.min((input.previousDefaults ?? 0) / 2, 1) * validatedModel.weights.defaults;
   const riskScore = Math.max(0, Math.min(100, round(raw)));
   const approvalProbability = round(sigmoid((riskScore - 50) / 10), 4);
-  const riskBand = riskScore >= 90 ? "excellent" : riskScore >= 75 ? "good" : riskScore >= 60 ? "fair" : riskScore >= 45 ? "borderline" : "high_risk";
-  const simulatedDecision = riskScore >= 75 ? "likely_approved" : riskScore >= 55 ? "manual_review" : "likely_declined";
+  const riskBand = getRiskBand(riskScore);
+  const simulatedDecision = getSimulatedDecision(riskScore);
   const aprCenter = Math.max(5.5, Math.min(29.5, 31 - riskScore * 0.25 + dtiAfterLoan * 4));
   const positiveFactors = [] as z.infer<typeof riskFactorSchema>[];
   const negativeFactors = [] as z.infer<typeof riskFactorSchema>[];
@@ -200,7 +210,7 @@ export function calculateRisk(input: FinancialInput, model: RiskModelConfig = DE
   return {
     derived: { monthlyIncome: round(monthlyIncome), estimatedMonthlyPayment: round(estimatedMonthlyPayment), dtiBeforeLoan: round(dtiBeforeLoan), dtiAfterLoan: round(dtiAfterLoan), loanToIncomeRatio: round(loanToIncomeRatio) },
     result: { approvalProbability, riskScore, riskBand, simulatedDecision, suggestedAprMin: round(Math.max(4.9, aprCenter - 1.4)), suggestedAprMax: round(Math.min(36, aprCenter + 1.4)), affordabilityGrade: dtiAfterLoan <= 0.28 ? "A" : dtiAfterLoan <= 0.36 ? "B" : dtiAfterLoan <= 0.43 ? "C" : dtiAfterLoan <= 0.5 ? "D" : "F" },
-    explanation: { positiveFactors, negativeFactors, warnings, modelVersion: model.version },
+    explanation: { positiveFactors, negativeFactors, warnings, modelVersion: validatedModel.version },
   };
 }
 
