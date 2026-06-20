@@ -3,7 +3,7 @@ import argon2 from "argon2";
 import crypto from "node:crypto";
 import { DEFAULT_FEATURE_FLAGS, DEFAULT_RISK_MODEL, calculateRisk, type FinancialInput } from "@credora/shared";
 import { connectDatabase } from "../db";
-import { BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, Report, RiskAnalysis, RiskModel, Session, User } from "../models";
+import { AIPromptTemplate, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, Report, RiskAnalysis, RiskModel, Session, User } from "../models";
 
 const demoInputs: FinancialInput[] = [
   { annualIncome: 95000, creditScore: 760, monthlyDebt: 850, requestedLoanAmount: 18000, loanTermMonths: 36, loanPurpose: "home improvement", employmentYears: 6, creditUtilization: .22 },
@@ -17,7 +17,7 @@ const demoInputs: FinancialInput[] = [
 ];
 
 async function reset() {
-  await Promise.all([User.deleteMany({}), Session.deleteMany({}), BorrowerProfile.deleteMany({}), RiskAnalysis.deleteMany({}), LoanScenario.deleteMany({}), ImprovementPlan.deleteMany({}), Report.deleteMany({}), FeatureFlag.deleteMany({}), RiskModel.deleteMany({})]);
+  await Promise.all([User.deleteMany({}), Session.deleteMany({}), BorrowerProfile.deleteMany({}), RiskAnalysis.deleteMany({}), LoanScenario.deleteMany({}), ImprovementPlan.deleteMany({}), Report.deleteMany({}), FeatureFlag.deleteMany({}), RiskModel.deleteMany({}), AIPromptTemplate.deleteMany({})]);
 }
 
 async function seed() {
@@ -31,6 +31,7 @@ async function seed() {
   await Session.create({ ownerId: guest._id, tokenHash: await argon2.hash(crypto.randomBytes(32).toString("base64url"), { type: argon2.argon2id }), csrfToken: crypto.randomBytes(24).toString("base64url"), expiresAt: new Date(Date.now() + 24 * 86_400_000) });
   await FeatureFlag.insertMany(Object.entries(DEFAULT_FEATURE_FLAGS).map(([key, enabled]) => ({ key, enabled, updatedBy: admin._id })));
   await RiskModel.create({ version: DEFAULT_RISK_MODEL.version, active: true, config: DEFAULT_RISK_MODEL, ownerId: admin._id });
+  await AIPromptTemplate.create({ key: "underwriting-memo", content: "Summarize the deterministic output in two short paragraphs. Describe material strengths and tradeoffs plainly, then offer one or two simulation-only what-if ideas. Keep the tone measured and educational.", active: true, updatedBy: admin._id });
   const profiles = await BorrowerProfile.create(demoInputs.map((input, index) => ({ ownerId: user._id, displayName: `Demo borrower ${index + 1}`, anonymized: true, baselineFinancials: input, tags: index % 2 ? ["comparison"] : ["baseline"] })));
   const analyses = await RiskAnalysis.create(Array.from({ length: 20 }, (_, index) => {
     const input = { ...demoInputs[index % demoInputs.length], requestedLoanAmount: demoInputs[index % demoInputs.length].requestedLoanAmount + (index % 4) * 750 };

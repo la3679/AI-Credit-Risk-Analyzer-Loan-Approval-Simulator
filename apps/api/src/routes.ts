@@ -248,11 +248,26 @@ router.delete("/api/reports/:id", requireAuth, async (req, res, next) => {
 router.post("/api/ai/underwriting-memo", requireAuth, async (req, res, next) => {
   try {
     await requireFlag("enable_ai_memos");
-    const body = z.object({ analysisId: z.string() }).parse(req.body);
+    const body = z.object({ analysisId: z.string(), regenerate: z.boolean().optional().default(false) }).parse(req.body);
     const analysis = await RiskAnalysis.findOne({ _id: body.analysisId, ownerId: req.auth!.userId });
     if (!analysis) throw new ApiError(404, "NOT_FOUND", "Analysis was not found.");
+    if (!body.regenerate && ["queued", "processing"].includes(analysis.aiMemoStatus ?? "idle")) {
+      return res.status(202).json({ analysisId: String(analysis._id), jobId: analysis.aiMemoJobId, status: analysis.aiMemoStatus });
+    }
+    if (!body.regenerate && analysis.aiMemoStatus === "completed" && analysis.aiMemo) {
+      return res.json({ analysisId: String(analysis._id), jobId: analysis.aiMemoJobId, status: "completed", memo: analysis.aiMemo });
+    }
     const job = await getQueues().ai.add("underwriting-memo", { analysisId: String(analysis._id), ownerId: req.auth!.userId });
-    res.status(202).json({ jobId: String(job.id), status: "queued" });
+    await RiskAnalysis.updateOne({ _id: analysis._id, ownerId: req.auth!.userId }, { aiMemoStatus: "queued", aiMemoJobId: String(job.id), aiMemoError: undefined, aiMemoProvider: undefined, aiMemoUsedFallback: false });
+    await audit(req.requestId, req.auth!.userId, "ai_memo.queued", { analysisId: String(analysis._id), jobId: String(job.id) });
+    res.status(202).json({ analysisId: String(analysis._id), jobId: String(job.id), status: "queued" });
+  } catch (error) { next(error); }
+});
+router.get("/api/ai/underwriting-memo/:analysisId", requireAuth, async (req, res, next) => {
+  try {
+    const analysis: any = await RiskAnalysis.findOne({ _id: req.params.analysisId, ownerId: req.auth!.userId }).select("aiMemo aiMemoStatus aiMemoJobId aiMemoProvider aiMemoUsedFallback aiMemoError aiMemoGeneratedAt").lean();
+    if (!analysis) throw new ApiError(404, "NOT_FOUND", "Analysis was not found.");
+    res.json({ memo: { content: analysis.aiMemo, status: analysis.aiMemoStatus ?? "idle", jobId: analysis.aiMemoJobId, provider: analysis.aiMemoProvider, usedFallback: Boolean(analysis.aiMemoUsedFallback), error: analysis.aiMemoError, generatedAt: analysis.aiMemoGeneratedAt } });
   } catch (error) { next(error); }
 });
 for (const task of ["borrower-explanation", "improvement-plan", "scenario-summary", "portfolio-insights"] as const) router.post(`/api/ai/${task}`, requireAuth, async (req, res, next) => {

@@ -9,7 +9,7 @@ import { getAIProvider, getMockProvider } from "./ai-providers";
 import { connectDatabase } from "../../api/src/db";
 import { env } from "../../api/src/config";
 import { getQueues, getRedis, QUEUES } from "../../api/src/queues";
-import { BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, User } from "../../api/src/models";
+import { AIPromptTemplate, BorrowerProfile, FeatureFlag, ImprovementPlan, LoanScenario, PortfolioSnapshot, Report, RiskAnalysis, User } from "../../api/src/models";
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
 const storageDir = path.resolve(process.env.REPORT_STORAGE_DIR ?? "storage/reports");
@@ -40,9 +40,16 @@ async function generateMemo(analysis: { result: any; derived: any; explanation: 
   const openAiFlag: any = await FeatureFlag.findOne({ key: "enable_openai_provider" }).lean();
   const openAiEnabled = openAiFlag?.enabled;
   const selected = env.AI_PROVIDER;
-  if (selected === "openai" && !openAiEnabled) return getMockProvider().generateUnderwritingMemo(analysis);
-  try { return await getAIProvider().generateUnderwritingMemo({ result: analysis.result, derived: analysis.derived, factors: analysis.explanation }); }
-  catch (error) { logger.warn({ provider: selected, err: error }, "AI provider failed; using deterministic mock fallback"); return getMockProvider().generateUnderwritingMemo(analysis); }
+  const template: any = await AIPromptTemplate.findOne({ key: "underwriting-memo", active: true }).sort({ version: -1 }).lean();
+  const input = { result: analysis.result, derived: analysis.derived, factors: analysis.explanation };
+  if (selected === "openai" && !openAiEnabled) return { memo: await getMockProvider().generateUnderwritingMemo(input, { promptTemplate: template?.content }), provider: "mock", usedFallback: true };
+  try {
+    const provider = getAIProvider();
+    return { memo: await provider.generateUnderwritingMemo(input, { promptTemplate: template?.content }), provider: provider.name, usedFallback: false };
+  } catch (error) {
+    logger.warn({ provider: selected, err: error }, "AI provider failed; using deterministic mock fallback");
+    return { memo: await getMockProvider().generateUnderwritingMemo(input, { promptTemplate: template?.content }), provider: "mock", usedFallback: true };
+  }
 }
 
 async function cleanupDemoData() {
@@ -90,8 +97,15 @@ async function start() {
     const { analysisId, ownerId } = job.data as { analysisId: string; ownerId: string };
     const analysis = await RiskAnalysis.findOne({ _id: analysisId, ownerId });
     if (!analysis) return;
-    const memo = await generateMemo(analysis as any);
-    await RiskAnalysis.updateOne({ _id: analysis._id, ownerId }, { aiMemo: memo });
+    await RiskAnalysis.updateOne({ _id: analysis._id, ownerId }, { aiMemoStatus: "processing", aiMemoError: undefined });
+    try {
+      const generated = await generateMemo(analysis as any);
+      await RiskAnalysis.updateOne({ _id: analysis._id, ownerId }, { aiMemo: generated.memo, aiMemoStatus: "completed", aiMemoProvider: generated.provider, aiMemoUsedFallback: generated.usedFallback, aiMemoGeneratedAt: new Date(), aiMemoError: undefined });
+      logger.info({ jobId: job.id, analysisId, ownerId, provider: generated.provider, usedFallback: generated.usedFallback }, "AI memo completed");
+    } catch (error) {
+      await RiskAnalysis.updateOne({ _id: analysis._id, ownerId }, { aiMemoStatus: "failed", aiMemoError: { code: "AI_MEMO_FAILED", message: error instanceof Error ? error.message : "Unknown error" } });
+      throw error;
+    }
   }, { connection, concurrency: 3 }).on("failed", (job, error) => logger.error({ jobId: job?.id, err: error }, "AI job failed"));
 
   new Worker(QUEUES.portfolio, async (job) => {

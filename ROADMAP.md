@@ -13,4 +13,6 @@ The implementation follows the nine conventional-commit phases in the reimagined
 
 **Phase 5 — Risk analyzer and results experience:** implementation complete; awaiting visual/responsive acceptance. A three-step, mobile-friendly analyzer validates permitted financial inputs before saving an analysis. The animated results experience includes a risk gauge, approval signal, DTI, payment, APR, affordability, factor waterfall, warnings, Autopilot candidates, and actions for scenarios, memos, and reports. Production build, unit tests, and a live authenticated Docker MongoDB/Redis create/retrieve/invalid-input flow passed; visual QA remains with the product owner because browser automation is unavailable in this environment.
 
-Next: complete visual/responsive acceptance for Phase 5, then begin Phase 6.
+**Phase 6 — Queued, provider-agnostic AI narratives:** implementation complete; awaiting visual/responsive acceptance. The AI worker now persists memo lifecycle states, job IDs, provider/fallback metadata, errors, and generated timestamps. The result view polls queued work and presents safe, bounded narrative states. Approved prompt templates are retrieved by the worker, and mock, OpenAI, Anthropic, OpenRouter, Groq, Together, Ollama, and Gemini adapters remain available behind the provider contract. Live Docker verification confirmed `queued → completed` with the mock provider and simulator disclaimer; `enable_ai_memos` denied queueing with a server-side 403 when disabled.
+
+Next: complete visual/responsive acceptance for Phase 6, then begin Phase 7.

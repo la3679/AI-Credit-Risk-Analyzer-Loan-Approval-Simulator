@@ -58,6 +58,12 @@ const analysisSchema = new mongoose.Schema({
   result: { type: mongoose.Schema.Types.Mixed, required: true },
   explanation: { type: mongoose.Schema.Types.Mixed, required: true },
   aiMemo: String,
+  aiMemoStatus: { type: String, enum: ["idle", "queued", "processing", "completed", "failed"], default: "idle", index: true },
+  aiMemoJobId: String,
+  aiMemoProvider: String,
+  aiMemoUsedFallback: { type: Boolean, default: false },
+  aiMemoError: { code: String, message: String },
+  aiMemoGeneratedAt: Date,
 }, { timestamps: { createdAt: true, updatedAt: false } });
 analysisSchema.index({ ownerId: 1, createdAt: -1 });
 export const RiskAnalysis = mongoose.models.RiskAnalysis || mongoose.model("RiskAnalysis", analysisSchema);
