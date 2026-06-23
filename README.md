@@ -48,3 +48,19 @@ See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), [SOURCES.md](S
 For a Render deployment, import `render.yaml`, configure the required environment values, and follow the [deployment promotion checklist](DEPLOYMENT.md#promotion-checklist). Render services require shared object storage before production report downloads are enabled.
 
 The Docker production verification path is `docker compose up --build -d`, followed by `/health`, `/ready`, and a same-origin request through `http://localhost:3000/api/feature-flags`.
+
+## Verification
+
+The delivery checks are intentionally layered: fast contracts first, then a real browser against the complete Docker stack.
+
+```bash
+npm run lint
+npm run test
+npm run build
+docker compose up --build -d
+docker compose exec -T api npm run seed:demo
+npm run test:e2e
+docker compose down
+```
+
+The Playwright suite verifies the public simulator disclosure, demo-session handoff, and seeded-account login on both desktop Chrome and a mobile viewport. See [the screenshot capture placeholder](docs/screenshots/README.md) when preparing portfolio imagery or release notes.

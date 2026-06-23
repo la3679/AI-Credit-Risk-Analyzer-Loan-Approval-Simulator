@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently -n web,api,worker -c cyan,green,magenta \"npm run dev -w @credora/web\" \"npm run dev -w @credora/api\" \"npm run dev -w @credora/worker\"",
     "dev:web": "npm run dev -w @credora/web",
@@ -12,11 +15,13 @@
     "build": "npm run build -w @credora/web && npm run build -w @credora/api && npm run build -w @credora/worker",
     "lint": "npm run lint -ws --if-present",
     "test": "npm run test -ws --if-present",
+    "test:e2e": "playwright test",
     "seed": "npm run seed -w @credora/api",
     "seed:demo": "npm run seed:demo -w @credora/api",
     "db:reset": "npm run db:reset -w @credora/api"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.14.0",
     "concurrently": "^9.1.2",
     "typescript": "^5.8.3"

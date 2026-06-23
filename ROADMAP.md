@@ -1,5 +1,11 @@
 # Credora AI roadmap
 
+## Phase 12 delivery status
+
+Phase 12 is complete. Desktop and mobile Playwright smoke tests cover the public disclosure, demo-session handoff, and seeded-account login against the Dockerized web, API, worker, MongoDB, and Redis stack. Final lint, unit, production-build, and browser checks pass. README, architecture, source references, screenshot-capture guidance, deployment runbooks, and the Render Blueprint document local and production operation.
+
+Next: product-owner visual review of the remaining marked workspace/admin screens, then Render environment provisioning and release promotion.
+
 The implementation follows the nine conventional-commit phases in the reimagined build specification. Each accepted phase is committed with a focused Conventional Commit; changes stay on `codex/credora-rebuild` and are never pushed directly to `main`.
 
 ## Verified phase status

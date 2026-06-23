@@ -9,3 +9,14 @@ Report generation and download share one workspace-relative storage contract (`s
 The risk engine is deterministic and contains no protected-class inputs. The AI provider contract supports OpenAI, Anthropic, OpenRouter, Groq, Together AI, Ollama/local, optional Gemini, and mock/offline providers. AI only synthesizes explanations; it never determines a score.
 
 The Next.js UI is organized into public marketing, authenticated workspace, and admin route groups. It uses a dark fintech/glass visual system, interactive visualizations, responsive layouts, deliberate motion, and reduced-motion alternatives.
+
+```mermaid
+flowchart LR
+  Browser["Browser / Next.js web"] -->|"same-origin /api/*"| API["Express API"]
+  API --> Mongo[(MongoDB)]
+  API --> Redis[(Redis / BullMQ)]
+  Redis --> Worker["Worker"]
+  Worker --> Mongo
+  Worker --> Reports["Report storage"]
+  API --> Reports
+```
