@@ -1,0 +1,87 @@
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: credora
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://root:example@mongodb:27017/credora?authSource=admin
+      REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: http://localhost:3000
+      COOKIE_SECURE: "false"
+      JWT_ACCESS_SECRET: change-this-before-production-change-this
+      AI_PROVIDER: mock
+    depends_on:
+      - mongodb
+      - redis
+    ports:
+      - "4010:4000"
+    volumes:
+      - reports_data:/app/storage/reports
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://root:example@mongodb:27017/credora?authSource=admin
+      REDIS_URL: redis://redis:6379
+      AI_PROVIDER: mock
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - reports_data:/app/storage/reports
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        API_ORIGIN: http://api:4000
+    environment:
+      API_ORIGIN: http://api:4000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+  mongo-express:
+    image: mongo-express:latest
+    profiles: ["admin"]
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongodb:27017/
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:
+  redis_data:
+  reports_data:

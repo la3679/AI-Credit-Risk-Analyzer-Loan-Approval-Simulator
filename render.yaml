@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: credora-web
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: ./apps/web/Dockerfile
+    envVars:
+      - key: API_ORIGIN
+        sync: false
+
+  - type: web
+    name: credora-api
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: REPORT_STORAGE_DIR
+        value: /app/storage/reports
+
+  - type: worker
+    name: credora-worker
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: ./apps/worker/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: AI_PROVIDER
+        value: mock
+      - key: REPORT_STORAGE_DIR
+        value: /app/storage/reports

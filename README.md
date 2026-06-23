@@ -1,167 +1,66 @@
-# AI Credit Risk Analyzer & Loan Approval Simulator
+# Credora AI
 
-A professional, high-performance financial technology suite designed for high-fidelity credit risk modeling, loan simulator scenarios, and automated financial intelligence synthesis.
+Credora AI is an educational credit-risk simulator and portfolio project. It does not provide financial advice, lending decisions, credit reports, regulatory-compliant underwriting, or real-lending-data predictions. Do not enter sensitive personal information.
 
-![Financial Dashboard](https://picsum.photos/seed/fintech/1200/400)
+## Product
 
-## 🚀 Overview
+Credora is a premium reactive fintech SaaS demonstration for explainable risk simulations, borrower scenarios, improvement planning, portfolio analytics, AI-generated educational narratives, and queued PDF reports.
 
-The **AI Credit Risk Analyzer** is a state-of-the-art fintech platform that transforms complex financial datasets into actionable intelligence. By integrating a custom-developed **Logistic Regression ML Engine** with **Generative Synthesis**, the system delivers a comprehensive "Deep Risk Analysis." It characterizes applicant risk through a sophisticated multi-dimensional lens, considering income stability, debt obligations, and historical credit performance.
+## Architecture
 
-## ✨ Core Features
+- `apps/web` — Next.js App Router UI with a dark, responsive fintech visual system. Same-origin `/api/*` calls are rewritten to the Express API.
+- `apps/api` — Express REST API with Zod validation, OpenAPI docs, MongoDB persistence, secure cookie sessions, feature flags, and observability.
+- `apps/worker` — BullMQ jobs for reports, AI narratives, portfolio snapshots, retries, and demo cleanup.
+- `packages/shared` — deterministic scoring engine, Zod DTOs, domain constants, and shared API contracts.
 
-### 1. Advanced Risk Modeling
-- **Instant Probabilistic Scoring**: Real-time calculation of approval probabilities using normalized logarithmic feature scaling.
-- **Explainable Analysis (XAI)**: Breakdown of positive and negative risk factors, providing transparency into "Black Box" predictions.
-- **Dynamic Interest Rate Simulation**: Automated calculation of suggested APR based on the derived risk category.
+MongoDB and Redis run through Docker Compose locally. Production targets separate Render web/API/worker services, MongoDB Atlas, Redis, and S3-compatible report storage.
 
-### 2. Comprehensive Intelligence
-- **Deep Synthesis Reports**: Automated generation of senior-level financial narratives using generative intelligence.
-- **Strategic Action Plans**: Priority-ranked suggestions (High/Medium/Low) for improving an applicant's financial standing.
-- **Atmospheric Data Visualization**: Interactive charts for Credit Score Trends and Debt Reduction trajectories.
+## Local development
 
-### 3. Profile & Portfolio Management
-- **Persistent Cloud Storage**: full integration with Firestore for secure, real-time profile persistence.
-- **Multi-Profile Comparison**: Side-by-side analysis of different saved financial scenarios.
-- **Professional PDF Exports**: Generate high-quality, branded reports for offline review or distribution.
-
----
-
-## 🛠️ Technical Architecture
-
-### Frontend Ecosystem
-- **Framework**: React 19 (Concurrent Mode)
-- **State Management**: React Context & Hooks for localized state orchestration.
-- **Data Visualization**: Recharts (Custom D3 implementation) for responsive, hardware-accelerated charting.
-- **Animations**: Framer Motion for cinematic UI transitions and interactive feedback loops.
-- **Styling**: Tailwind CSS 4.0 with customized "Neo-Fintech" atmospheric theme.
-
-### Server-Side Infrastructure
-- **Runtime**: Node.js with Express.js integration.
-- **ML Layer**: Custom TypeScript-based Linear Algebra implementation for Logistic Regression.
-- **Database**: Firebase Firestore (NoSQL) with sub-collection isolation.
-- **Authentication**: Firebase Identity Platform (OIDC / Google OAuth).
-- **Intelligence Layer**: Large Language Model integration for narrative synthesis.
-
----
-
-## 🧠 Machine Learning Engine: Under the Hood
-
-The predictive heart of the application is an optimized **Logistic Regression** model. Unlike standard implementations, this engine is optimized for sub-millisecond execution directly within the financial pipeline.
-
-### Feature Normalization
-The engine utilizes several normalization strategies to maintain model stability across diverse income brackets:
-- **Income**: Normalized using $min(\frac{income}{200000}, 1)$ to isolate variance.
-- **Credit Score**: Scaled to a [0, 1] range based on the FICO standard (300-850).
-- **Ratios**: Real-time derivation of Debt-to-Income (DTI) and Loan-to-Income (LTI) coefficients.
-
-### Weight Distribution
-The model utilizes a conservative weight matrix derived from historical lending heuristics:
-| Feature | Weight | Role |
-| :--- | :--- | :--- |
-| **Credit Score** | +4.0 | Reliability Coefficient |
-| **Income** | +2.5 | Liquidity Coefficient |
-| **DTI (Debt)** | -3.5 | Obligation Penalty |
-| **LTI (Loan)** | -2.0 | Exposure Penalty |
-| **Age** | +0.5 | Stability Factor |
-
----
-
-## 📁 Project Structure
-
-```text
-├── server.ts              # Entry point for Express & Vite middleware
-├── firebase-blueprint.json # IR representation of the data schema
-├── firestore.rules        # Hardened security rules for database access
-├── src/
-│   ├── App.tsx            # Main application layout & route orchestration
-│   ├── components/        # Reusable UI architecture
-│   │   ├── ui/            # Atomic shadcn/ui components
-│   │   ├── InsightsPanel  # Cinematic AI synthesis display
-│   │   ├── RiskGauge      # Advanced SVG-based risk visualization
-│   │   ├── CreditTimeline # Interactive Recharts implementation
-│   │   └── ComparisonView # Side-by-side scenario analyzer
-│   ├── lib/               # Core business logic
-│   │   ├── ml.ts          # Custom ML Model implementation
-│   │   ├── riskService.ts # Risk calculation orchestration
-│   │   └── firebase.ts    # Firebase SDK initialization
-│   └── types.ts           # Global TypeScript interface definitions
+```bash
+cp .env.example .env
+docker compose up -d mongodb redis
+npm install
+npm run seed:demo
+npm run dev
 ```
 
----
+- Web: `http://localhost:3000`
+- API health: `http://localhost:4010/health`
+- API readiness: `http://localhost:4010/ready`
+- OpenAPI: `http://localhost:4010/api/openapi.json`
+- Swagger UI: `http://localhost:4010/api/docs`
 
-## 🛰️ API Documentation
+Demo credentials: `analyst@credora.local` / `CredoraDemo!2026`.
 
-### `POST /api/predict-risk`
-Calculates the probability of loan approval based on financial inputs.
-- **Payload**: `FinancialData` object.
-- **Returns**: `RiskResult` including score, category, and explainable factors.
+Redis is published on host port `6380` to avoid collisions with other local projects; containers use `redis://redis:6379` internally.
 
-### `POST /api/suggest-improvements`
-Generates actionable strategic advice based on financial variance.
-- **Payload**: `FinancialData` object.
-- **Returns**: Array of `ImprovementSuggestion` objects.
+## AI providers
 
----
+The provider interface supports OpenAI, Anthropic, OpenRouter, Groq, Together AI, Ollama, optional Gemini, and an offline mock implementation. Provider choice and credentials live only in server/worker environment variables; the deterministic risk score never relies on AI.
 
-## 🏃‍♂️ Local Development Setup
+## Safety and privacy
 
-### Prerequisites
-- Node.js v18.x or v20.x
-- Firebase account with a Firestore instance
-- Generative AI API Key
+The scoring model accepts financial and loan fields only. It does not collect or score race, religion, ethnicity, gender, disability, marital status, national origin, or similar protected attributes. Credora makes no ECOA/FCRA-compliance claim and does not claim training on real lending data.
 
-### Installation
+See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), [SOURCES.md](SOURCES.md), and [DEPLOYMENT.md](DEPLOYMENT.md) for implementation and operations guidance.
 
-1. **Clone & Install**:
-   ```bash
-   git clone <repository-url>
-   cd credit-risk-analyzer
-   npm install
-   ```
+For a Render deployment, import `render.yaml`, configure the required environment values, and follow the [deployment promotion checklist](DEPLOYMENT.md#promotion-checklist). Render services require shared object storage before production report downloads are enabled.
 
-2. **Environment Configuration**:
-   Create a `.env` file in the root directory:
-   ```env
-   # Generative AI Key
-   GEMINI_API_KEY=your_key_here
+The Docker production verification path is `docker compose up --build -d`, followed by `/health`, `/ready`, and a same-origin request through `http://localhost:3000/api/feature-flags`.
 
-   # Firebase Configuration (Client-side)
-   VITE_FIREBASE_API_KEY=...
-   VITE_FIREBASE_AUTH_DOMAIN=...
-   VITE_FIREBASE_PROJECT_ID=...
-   VITE_FIREBASE_STORAGE_BUCKET=...
-   VITE_FIREBASE_MESSAGING_SENDER_ID=...
-   VITE_FIREBASE_APP_ID=...
-   ```
+## Verification
 
-3. **Launch**:
-   ```bash
-   npm run dev
-   ```
-   Access the dashboard at `http://localhost:3000`.
+The delivery checks are intentionally layered: fast contracts first, then a real browser against the complete Docker stack.
 
----
+```bash
+npm run lint
+npm run test
+npm run build
+docker compose up --build -d
+docker compose exec -T api npm run seed:demo
+npm run test:e2e
+docker compose down
+```
 
-## 🌐 Deployment Guidelines
-
-### Netlify Deployment
-The project includes a `netlify.toml` for seamless deployment.
-1. Connect your repo to Netlify.
-2. Ensure the **Build Command** is set to `npm run build`.
-3. Set the **Publish Directory** to `dist`.
-4. Add all environment variables from your `.env` file to the Netlify environment settings.
-
----
-
-## 🛡️ Security & Data Privacy
-
-### Hardened Firestore Rules
-The application utilizes a **Zero-Trust** security model for data access:
-- **Identity Isolation**: Users can only read/write documents where the `uid` matches their authenticated session.
-- **Schema Validation**: Every write operation is validated against a strict entity schema using custom rule functions.
-- **PII Isolation**: Financial data is stored in user-specific sub-collections to ensure total data segregation.
-
-### Operational Security
-- **Server-Side ML**: Prediction logic is executed on the server, preventing client-side tempering of results.
-- **Rate Limiting**: Integrated protections to prevent brute-force risk analysis attempts.
+The Playwright suite verifies the public simulator disclosure, demo-session handoff, and seeded-account login on both desktop Chrome and a mobile viewport. See [the screenshot capture placeholder](docs/screenshots/README.md) when preparing portfolio imagery or release notes.

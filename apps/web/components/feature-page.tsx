@@ -1,0 +1,8 @@
+import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, LockKeyhole } from "lucide-react";
+import { Disclaimer } from "./site-chrome";
+
+export function FeaturePage({ eyebrow, title, description, icon: Icon, action, points = [] }: { eyebrow: string; title: string; description: string; icon: LucideIcon; action?: { label: string; href: string }; points?: string[] }) {
+  return <div className="grid-glow min-h-[65vh]"><section className="mx-auto max-w-6xl px-5 py-14"><div className="glass relative overflow-hidden rounded-3xl p-7 md:p-10"><div className="absolute -right-12 -top-20 h-56 w-56 rounded-full bg-[#61e6cf1c] blur-3xl"/><Icon className="h-6 w-6 text-[#61e6cf]"/><p className="mt-7 text-sm font-medium text-[#61e6cf]">{eyebrow}</p><h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-.045em] md:text-5xl">{title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-[#b8d3cf]">{description}</p>{action && <Link className="button button-primary mt-7" href={action.href}>{action.label}<ArrowUpRight className="h-4 w-4"/></Link>}</div>{points.length > 0 && <div className="mt-5 grid gap-3 md:grid-cols-3">{points.map((point) => <div className="glass rounded-2xl p-5 text-sm text-[#b8d3cf]" key={point}><CheckCircle2 className="mb-4 h-4 w-4 text-[#61e6cf]"/>{point}</div>)}</div>}<div className="mt-7 max-w-4xl"><Disclaimer /></div><p className="mt-4 flex items-center gap-2 text-xs text-[#718c88]"><LockKeyhole className="h-3.5 w-3.5"/>Data is scoped to the active account or temporary demo workspace.</p></section></div>;
+}
