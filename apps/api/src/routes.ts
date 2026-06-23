@@ -231,10 +231,10 @@ router.post("/api/improvement-plans/from-autopilot", requireAuth, async (req, re
 router.post("/api/reports", requireAuth, async (req, res, next) => {
   try {
     await requireFlag("enable_pdf_reports");
-    const body = z.object({ analysisId: z.string(), title: z.string().min(3).max(160).default("Credit risk simulation report") }).parse(req.body);
+    const body = z.object({ analysisId: z.string(), title: z.string().min(3).max(160).default("Credit risk simulation report"), type: z.enum(["risk_report", "executive_summary"]).default("risk_report") }).parse(req.body);
     const analysis = await RiskAnalysis.findOne({ _id: body.analysisId, ownerId: req.auth!.userId });
     if (!analysis) throw new ApiError(404, "NOT_FOUND", "Analysis was not found.");
-    const report = await Report.create({ ownerId: req.auth!.userId, analysisId: analysis._id, title: body.title, status: "queued", expiresAt: new Date(Date.now() + 30 * 86_400_000) });
+    const report = await Report.create({ ownerId: req.auth!.userId, analysisId: analysis._id, type: body.type, title: body.title, modelVersion: (analysis.explanation as any).modelVersion, status: "queued", expiresAt: new Date(Date.now() + 30 * 86_400_000) });
     const job = await getQueues().reports.add("generate-pdf", { reportId: String(report._id), ownerId: req.auth!.userId });
     await Report.updateOne({ _id: report._id, ownerId: req.auth!.userId }, { jobId: String(job.id) });
     res.status(202).json({ report: { id: String(report._id), status: "queued", jobId: String(job.id) } });

@@ -4,7 +4,7 @@ Credora is a workspace with a Next.js App Router frontend (`apps/web`), an Expre
 
 MongoDB stores users, sessions, analyses, profiles, scenarios, plans, reports, flags, models, and audit records. Redis backs BullMQ queues for reports, AI, portfolio snapshots, and cleanup. Every user-owned query includes `ownerId`; admins follow explicit role-protected paths.
 
-Report generation and download share one workspace-relative storage contract (`storage/reports` unless `REPORT_STORAGE_DIR` is supplied). Both the API and worker import this path helper, preventing process working-directory differences from breaking completed report downloads. Production replaces this local store with the configured object-storage integration.
+Report generation and download share one workspace-relative storage contract (`storage/reports` unless `REPORT_STORAGE_DIR` is supplied). Both the API and worker import this path helper, preventing process working-directory differences from breaking completed report downloads. A report stores its type and the exact deterministic model version that created it; the worker includes that version and the simulator disclaimer in the PDF. Production replaces this local store with the configured object-storage integration.
 
 The risk engine is deterministic and contains no protected-class inputs. The AI provider contract supports OpenAI, Anthropic, OpenRouter, Groq, Together AI, Ollama/local, optional Gemini, and mock/offline providers. AI only synthesizes explanations; it never determines a score.
 

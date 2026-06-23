@@ -15,7 +15,7 @@ import { reportStorageDir } from "../../api/src/storage";
 const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
 const storageDir = reportStorageDir;
 
-function writePdf(reportId: string, title: string, analysis: { input: Record<string, unknown>; result: Record<string, unknown>; explanation: Record<string, unknown> }) {
+function writePdf(reportId: string, title: string, analysis: { input: Record<string, unknown>; result: Record<string, unknown>; derived: Record<string, unknown>; explanation: Record<string, unknown> }) {
   fs.mkdirSync(storageDir, { recursive: true });
   const fileName = `${reportId}.pdf`;
   const output = path.join(storageDir, fileName);
@@ -23,14 +23,18 @@ function writePdf(reportId: string, title: string, analysis: { input: Record<str
     const doc = new PDFDocument({ margin: 48 });
     const stream = fs.createWriteStream(output);
     doc.pipe(stream);
-    doc.fontSize(24).fillColor("#0f2f3a").text("Credora AI", { continued: true }).fillColor("#0f172a").text(" — Simulation Report");
-    doc.moveDown().fontSize(16).text(title);
-    doc.moveDown().fontSize(11).fillColor("#334155").text(SIMULATOR_DISCLAIMER);
-    doc.moveDown().fillColor("#0f172a").fontSize(14).text("Simulation input");
-    Object.entries(analysis.input).forEach(([key, value]) => doc.fontSize(10).text(`${key}: ${String(value)}`));
-    doc.moveDown().fontSize(14).text("Simulated result");
-    Object.entries(analysis.result).forEach(([key, value]) => doc.fontSize(10).text(`${key}: ${String(value)}`));
-    doc.moveDown().fontSize(9).fillColor("#64748b").text("Generated for a portfolio demonstration. This report is not a credit report or loan decision.");
+    doc.fontSize(24).fillColor("#0f2f3a").text("Credora AI", { continued: true }).fillColor("#0f172a").text(" - Simulation Report");
+    doc.moveDown(.35).fontSize(16).fillColor("#0f172a").text(title);
+    doc.moveDown(.4).fontSize(9).fillColor("#0f766e").text(`MODEL VERSION: ${String((analysis.explanation as any).modelVersion ?? "versioned simulator")}`);
+    doc.moveDown(.7).fontSize(11).fillColor("#334155").text(SIMULATOR_DISCLAIMER);
+    doc.moveDown().fillColor("#0f172a").fontSize(14).text("Simulation summary");
+    const summary = [["Risk score", (analysis.result as any).riskScore], ["Simulated approval signal", `${Math.round(Number((analysis.result as any).approvalProbability ?? 0) * 100)}%`], ["Estimated monthly payment", `$${Number((analysis.derived as any).estimatedMonthlyPayment ?? 0).toFixed(0)}`], ["Projected DTI", `${(Number((analysis.derived as any).dtiAfterLoan ?? 0) * 100).toFixed(1)}%`]];
+    summary.forEach(([label, value]) => doc.fontSize(10).fillColor("#334155").text(`${label}: `, { continued: true }).fillColor("#0f172a").text(String(value)));
+    doc.moveDown().fontSize(14).fillColor("#0f172a").text("Simulation inputs");
+    Object.entries(analysis.input).forEach(([key, value]) => doc.fontSize(9).fillColor("#334155").text(`${key}: ${String(value)}`));
+    const warnings = (analysis.explanation as any).warnings as string[] | undefined;
+    if (warnings?.length) { doc.moveDown().fontSize(14).fillColor("#0f172a").text("Data and risk warnings"); warnings.forEach((warning) => doc.fontSize(9).fillColor("#92400e").text(`- ${warning}`)); }
+    doc.moveDown().fontSize(9).fillColor("#64748b").text("Generated for a portfolio demonstration. This report is not a credit report, lending decision, or regulatory underwriting document.");
     doc.end();
     stream.on("finish", () => resolve(`/api/reports/${reportId}/download`));
     stream.on("error", reject);

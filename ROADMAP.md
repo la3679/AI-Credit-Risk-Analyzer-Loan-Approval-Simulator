@@ -22,3 +22,7 @@ The implementation follows the nine conventional-commit phases in the reimagined
 **Phase 9 — Verification and delivery:** implementation complete; technical acceptance passed. Added Docker build hygiene, production API/worker start commands, a Next standalone web command, shared report-path resolution for relative environment values, a Render Blueprint, and expanded API/deployment/runbook documentation. Full Docker verification passed: API `/health` and `/ready` returned 200; the browser-facing `/api/feature-flags` rewrite returned 200; an authenticated user completed login → analysis → queued report → worker completion → 200 PDF download through the web origin. Render provisioning and durable shared object storage remain external deployment configuration steps.
 
 Next: final product-owner review and Render environment provisioning.
+
+**Phase 10 — Report Studio and PDF exports:** implementation complete; awaiting visual acceptance. Added the pollable `/reports/[id]` preview, report type/model-version metadata, downloadable branded export sections, and report-history links. A fresh Docker-backed report completed as `executive_summary`; structural PDF verification confirmed its model version, simulation summary, and simulator disclaimer. Raster PDF visual inspection remains unavailable here because Poppler is not installed.
+
+Next: begin Phase 11 — Admin Control Center.

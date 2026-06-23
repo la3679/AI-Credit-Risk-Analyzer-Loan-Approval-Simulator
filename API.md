@@ -23,7 +23,7 @@ All JSON errors follow `{ "error": { "code", "message", "requestId", "details?" 
 
 ## Reports and portfolio
 
-- `GET|POST /api/reports`, `GET|DELETE /api/reports/:id`, `GET /api/reports/:id/download`
+- `GET|POST /api/reports`, `GET|DELETE /api/reports/:id`, `GET /api/reports/:id/download` (creation supports `risk_report` and `executive_summary` types and persists the source model version)
 - `GET /api/portfolio/summary`, `GET /api/portfolio/risk-distribution`, `GET /api/portfolio/alerts`, `GET /api/portfolio/snapshots`, `POST /api/portfolio/snapshot`
 
 Reports transition through `queued`, `processing`, `completed`, `failed`, `expired`, and `deleted`. Creation and AI/portfolio work return `202 Accepted` with a BullMQ job ID.

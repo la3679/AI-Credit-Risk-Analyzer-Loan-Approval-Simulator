@@ -39,7 +39,7 @@ async function seed() {
   }));
   await LoanScenario.create(Array.from({ length: 6 }, (_, index) => ({ ownerId: user._id, name: `Scenario comparison ${index + 1}`, baseAnalysisId: analyses[index]._id, inputs: analyses[index].input, resultSnapshot: analyses[index].result, comparisonGroup: `comparison-${index + 1}` })));
   await ImprovementPlan.create(Array.from({ length: 4 }, (_, index) => ({ ownerId: user._id, analysisId: analyses[index]._id, title: `Improvement plan ${index + 1}`, items: [{ title: "Lower revolving debt", description: "Model a lower monthly debt obligation.", priority: "high", estimatedImpact: 8, completed: false }, { title: "Review loan amount", description: "Test a smaller requested loan amount.", priority: "medium", estimatedImpact: 5, completed: false }] })));
-  await Report.create(Array.from({ length: 5 }, (_, index) => ({ ownerId: user._id, analysisId: analyses[index]._id, title: `Demo simulation report ${index + 1}`, status: "completed", pdfUrl: `/api/reports/demo-${index + 1}/download`, contentMarkdown: "Educational demo report record.", expiresAt: new Date(Date.now() + 30 * 86_400_000) })));
+  await Report.create(Array.from({ length: 5 }, (_, index) => ({ ownerId: user._id, analysisId: analyses[index]._id, title: `Demo simulation report ${index + 1}`, modelVersion: (analyses[index].explanation as any).modelVersion, status: "completed", pdfUrl: `/api/reports/demo-${index + 1}/download`, contentMarkdown: "Educational demo report record.", expiresAt: new Date(Date.now() + 30 * 86_400_000) })));
   console.log("Seeded Credora demo data: 8 profiles, 20 analyses, 6 scenarios, 4 plans, 5 reports, admin, user, and guest session.");
 }
 

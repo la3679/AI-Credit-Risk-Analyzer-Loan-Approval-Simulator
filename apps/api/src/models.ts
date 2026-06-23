@@ -107,6 +107,7 @@ const reportSchema = new mongoose.Schema({
   analysisId: { type: mongoose.Schema.Types.ObjectId, ref: "RiskAnalysis" },
   type: { type: String, default: "risk_report" },
   title: { type: String, required: true },
+  modelVersion: String,
   status: { type: String, enum: reportStatusSchema.options, default: "queued", index: true },
   jobId: String,
   pdfUrl: String,
