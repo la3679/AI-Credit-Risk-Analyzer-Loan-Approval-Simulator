@@ -340,6 +340,15 @@ router.patch("/api/admin/ai-prompts/:id", requireAuth, requireAdmin, async (req,
 router.get("/api/admin/ai-providers", requireAuth, requireAdmin, async (_req, res, next) => {
   try { res.json({ selected: process.env.AI_PROVIDER ?? "mock", providers: ["mock", "openai", "anthropic", "openrouter", "groq", "together", "ollama", "gemini"], openAiFeatureEnabled: (await getFeatureFlags()).enable_openai_provider }); } catch (error) { next(error); }
 });
+router.get("/api/admin/demo-data", requireAuth, requireAdmin, async (_req, res, next) => {
+  try {
+    const [guests, profiles, analyses, scenarios, plans, reports] = await Promise.all([User.countDocuments({ isGuest: true }), BorrowerProfile.countDocuments(), RiskAnalysis.countDocuments(), LoanScenario.countDocuments(), ImprovementPlan.countDocuments(), Report.countDocuments()]);
+    res.json({ guests, profiles, analyses, scenarios, plans, reports });
+  } catch (error) { next(error); }
+});
+router.post("/api/admin/demo-data/cleanup", requireAuth, requireAdmin, async (req, res, next) => {
+  try { const job = await getQueues().maintenance.add("manual-demo-cleanup", { requestedBy: req.auth!.userId }); await audit(req.requestId, req.auth!.userId, "demo_data.cleanup_queued", { jobId: String(job.id) }); res.status(202).json({ jobId: String(job.id), status: "queued" }); } catch (error) { next(error); }
+});
 router.get("/api/admin/jobs", requireAuth, requireAdmin, async (_req, res, next) => {
   try { const queues = getQueues(); const counts = await Promise.all(Object.entries(queues).map(async ([name, queue]) => [name, await queue.getJobCounts("waiting", "active", "completed", "failed", "delayed")])); res.json({ queues: Object.fromEntries(counts) }); } catch (error) { next(error); }
 });

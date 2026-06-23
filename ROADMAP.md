@@ -26,3 +26,7 @@ Next: final product-owner review and Render environment provisioning.
 **Phase 10 — Report Studio and PDF exports:** implementation complete; awaiting visual acceptance. Added the pollable `/reports/[id]` preview, report type/model-version metadata, downloadable branded export sections, and report-history links. A fresh Docker-backed report completed as `executive_summary`; structural PDF verification confirmed its model version, simulation summary, and simulator disclaimer. Raster PDF visual inspection remains unavailable here because Poppler is not installed.
 
 Next: begin Phase 11 — Admin Control Center.
+
+**Phase 11 — Admin Control Center:** implementation complete; awaiting visual acceptance. The admin operations surface now manages model versions, prompt versions, provider status, feature flags, users, demo-data cleanup, and audit evidence. Added dedicated provider, demo-data, and reports admin URLs. API verification confirmed prompt creation, provider status, demo-cleanup job queueing, and the resulting audit log event; model creation is enforced by the shared risk-model schema.
+
+Next: begin Phase 12 — Testing, documentation, polish, and deployment.
